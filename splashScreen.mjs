@@ -1,7 +1,7 @@
 import ANSI from "./utils/ANSI.mjs";
 
 
-const outputGraphics = ` 
+const outputGraphics = `
  ██▓    ▄▄▄       ▄▄▄▄ ▓██   ██▓ ██▀███   ██▓ ███▄    █ ▄▄▄█████▓ ██░ ██
 ▓██▒   ▒████▄    ▓█████▄▒██  ██▒▓██ ▒ ██▒▓██▒ ██ ▀█   █ ▓  ██▒ ▓▒▓██░ ██▒
 ▒██░   ▒██  ▀█▄  ▒██▒ ▄██▒██ ██░▓██ ░▄█ ▒▒██▒▓██  ▀█ ██▒▒ ▓██░ ▒░▒██▀▀██░
@@ -22,7 +22,7 @@ class SplashScreen {
 this.isDirty = true; 
     }
 
-    animate(onComplete) {
+    animate(onComplete) {     
     const lines = outputGraphics.trim().split("\n");
     let frameIndex = 0; 
 
