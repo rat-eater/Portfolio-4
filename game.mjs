@@ -1,4 +1,4 @@
-import Labyrinth from "./labyrinth.mjs"
+import Labyrinth from "./labyrint.mjs"
 import SplashScreen from "./splashScreen.mjs";
 import ANSI from "./utils/ANSI.mjs";
 
@@ -14,11 +14,9 @@ function init() {
     const splash = new SplashScreen();
     //All levels available to the game. 
     splash.animate(() => {
-        state = new Labyrinth();
+        state = new Labyrinth(() => clearInterval(intervalID));
         intervalID = setInterval(update, REFRESH_RATE);
     });
-    state = new Labyrinth();
-    intervalID = setInterval(update, REFRESH_RATE);
 }
 
 function update() {
