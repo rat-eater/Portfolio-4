@@ -9,8 +9,11 @@ const levelHistory = [];
 const DOOR_MAPPINGS = {
     "start": { "D": { targetRoom: "aSharpPlace", targetDoor: "D" } },
     "aSharpPlace": { 
-        "D": { targetRoom: "start", targetDoor: "D" } }
-}
+        "D": { targetRoom: "start", targetDoor: "D" },
+        "d": { targetRoom: "thirdRoom", targetDoor: "d" } 
+    },
+    "thirdRoom": { "d": { targetRoom: "aSharpPlace", targetDoor: "d" } }
+};
 
 const EMPTY = " ";
 const HERO = "H";
@@ -21,7 +24,7 @@ const HP_MAX = 10;
 
 const playerStats = {
     hp: 8,
-    cash: 0
+    chash: 0
 };
 
 let isDirty = true;
@@ -46,6 +49,7 @@ class Labyrinth {
         this.npcs = [];
         this.lastDoorSymbol = null;
         this.loadLevel(startingLevel);
+        this.combatLog = [];
     }
 
     loadLevel(levelID, fromDoor = null) {
@@ -80,21 +84,31 @@ class Labyrinth {
                 playerPos.col = doorLocation.col;
             }
         }
+
+        this.npcs = [];
+        for (let row = 0; row < this.level.length; row++) {
+            for (let col = 0; col < this.level[row].length; col++) {
+                if (this.level[row][col] === "X") {
+                    this.npcs.push({ row, col, direction: 1 });
+                }
+            }
+        }
+
         isDirty = true;
     }
 
     update() {
-        let dRow = 0;
-        let dCol = 0;
+        let drow = 0;
+        let dcol = 0;
 
-        if (KeyBoardManager.isUpPressed()) dRow = -1;
-        else if (KeyBoardManager.isDownPressed()) dRow = 1;
+        if (KeyBoardManager.isUpPressed()) drow = -1;
+        else if (KeyBoardManager.isDownPressed()) drow = 1;
 
-        if (KeyBoardManager.isLeftPressed()) dCol = -1;
-        else if (KeyBoardManager.isRightPressed()) dCol = 1;
+        if (KeyBoardManager.isLeftPressed()) dcol = -1;
+        else if (KeyBoardManager.isRightPressed()) dcol = 1;
 
-        let tRow = playerPos.row + dRow;
-        let tCol = playerPos.col + dCol;
+        let tRow = playerPos.row + drow;
+        let tCol = playerPos.col + dcol;
 
         if (tRow < 0 || tCol < 0 || tRow >= this.level.length || tCol >= this.level[0].length) return;
 
@@ -103,8 +117,8 @@ class Labyrinth {
         if (targetCell === EMPTY || THINGS.includes(targetCell)) {
             if (targetCell === LOOT) {
                 let loot = Math.round(Math.random() * 7) + 3;
-                playerStats.cash += loot;
-                eventText = `Player gained ${loot}$`;
+                playerStats.chash += loot;
+                this.addCombatLog = `Player gained ${loot}$`;
             }
 
             if (this.level[playerPos.row][playerPos.col] === HERO && this.lastDoorSymbol) {
@@ -127,14 +141,14 @@ class Labyrinth {
                 this.lastDoorSymbol = targetCell;
                 this.loadLevel(doorMapping.targetRoom, doorMapping.targetDoor);
             }
-        } else if (targetCell === "♨︎") {
+        } else if (targetCell === "\u2668") {
             const otherTeleport = this.findSecondTeleport(tRow, tCol);
             if (otherTeleport) {
-                this.level[playerPos.row][playerPos.col] = "♨︎";
+                this.level[playerPos.row][playerPos.col] = "\u2668";
                 playerPos.row = otherTeleport.row;
                 playerPos.col = otherTeleport.col;
                 this.level[playerPos.row][playerPos.col] = HERO;
-                eventText = "Teleported!";
+                this.addCombatLog = "Teleported!";
                 isDirty = true;
             }
         }
@@ -178,13 +192,35 @@ class Labyrinth {
             rendering += rowRendering + "\n";
         }
 
+        rendering += "\nCombat Log:\n";
+        this.combatLog.forEach(log => {
+            rendering += `${log}\n`;
+        });
         console.log(rendering);
+    }
+
+    addCombatLog(message) {
+        this.combatLog.push(`> ${message}`);
+        if (this.combatLog.length > 5) {
+            this.combatLog.shift();
+        }
     }
 
     renderHud() {
         let hpBar = `Life:[${"♥︎".repeat(playerStats.hp)}${" ".repeat(HP_MAX - playerStats.hp)}] `;
-        let cash = `$:${playerStats.cash}`;
+        let cash = `$:${playerStats.chash}`;
         return `${hpBar} ${cash}\n`;
+    }
+
+    findSecondTeleport(currentRow, currentCol) {
+        for (let row = 0; row < this.level.length; row++) {
+            for (let col = 0; col < this.level[row].length; col++) {
+                if (this.level[row][col] === "♨︎" && (row !== currentRow || col !== currentCol)) {
+                    return { row, col };
+                }
+            }
+        }
+        return null;
     }
 
     findSymbol(symbol) {
